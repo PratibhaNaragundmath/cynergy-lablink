@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isStudent() {
+      return isAuthenticated() && getUserData().role == 'student';
+    }
+    
+    function isFaculty() {
+      return isAuthenticated() && (getUserData().role == 'faculty' || getUserData().role == 'admin');
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+
+    // Users Collection: Users can read user data; only admin can modify roles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId && !('role' in request.resource.data && request.resource.data.role != resource.data.role));
+      allow delete: if isAdmin();
+    }
+
+    // Departments: Publicly readable; editable only by Admin
+    match /departments/{deptId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Resources: Publicly readable; faculty & admin can update/manage availability
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow create, update, delete: if isFaculty() || isAdmin();
+    }
+
+    // Booking Requests
+    match /bookingRequests/{requestId} {
+      // Students can view their own requests; Faculty & Admin can view all
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isFaculty() || isAdmin()
+      );
+      
+      // Students can create requests only for themselves
+      allow create: if isAuthenticated() && 
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      
+      // Students cannot self-approve or modify administrative fields
+      // Faculty and Admins hold authoritative approval power
+      allow update: if isFaculty() || isAdmin() || (
+        isAuthenticated() && 
+        resource.data.studentId == request.auth.uid && 
+        request.resource.data.status == 'cancelled'
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    // Notifications: Private to user
+    match /notifications/{notifId} {
+      allow read, update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // Audit Logs: Tamper-evident ledger; cannot be modified by ordinary users
+    match /auditLogs/{logId} {
+      allow read: if isFaculty() || isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutable audit trail
+    }
+  }
+}

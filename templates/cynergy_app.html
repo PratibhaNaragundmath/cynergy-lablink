@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231b56f0'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'/></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LabLink — Campus Laboratory Resource Sharing & Intelligent Allocation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" crossorigin href="/assets/index-CIa1PZH8.css">
+    <script>
+      // Synchronize Django authenticated user session directly into React application storage
+      (function() {
+        try {
+          const authUser = {
+            uid: "user-{{ user.id }}",
+            name: "{{ user.username }}",
+            email: "{{ user.email|default:user.username }}",
+            role: "student",
+            department: "Artificial Intelligence & Data Science",
+            createdAt: "{{ user.date_joined|date:'c' }}"
+          };
+          localStorage.setItem('lablink_current_user_v1', JSON.stringify(authUser));
+        } catch (err) {
+          console.warn("Storage sync warning:", err);
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased font-sans min-h-screen">
+    <!-- Top Django Auth Status & Logout Bar -->
+    <header style="background: #0f172a; color: #94a3b8; font-size: 13px; padding: 8px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 99999; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+        <span style="font-family: sans-serif;">
+          Signed in as <strong style="color: #ffffff; font-weight: 600;">{{ user.username }}</strong>
+          <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 9999px; background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 11px;">
+            {{ auth_method }}
+          </span>
+        </span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="{% url 'logout' %}" style="display: inline-flex; align-items: center; gap: 5px; color: #f87171; text-decoration: none; font-size: 12px; font-weight: 600; padding: 4px 12px; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; background: rgba(239, 68, 68, 0.1); transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
+          <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Logout
+        </a>
+      </div>
+    </header>
+
+    <!-- React Application Root Container -->
+    <div id="root"></div>
+
+    <!-- Cynergy React Vite App Bundle -->
+    <script type="module" crossorigin src="/assets/index-DKOiIXx1.js"></script>
+  </body>
+</html>

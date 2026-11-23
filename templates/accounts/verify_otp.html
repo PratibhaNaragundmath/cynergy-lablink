@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify OTP - Django Auth Demo{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+    <!-- Header -->
+    <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 mb-3 shadow-inner">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">Verify Your Email</h1>
+        <p class="text-sm text-slate-400 mt-1.5">
+            We sent a 6-digit OTP code to<br>
+            <span class="font-semibold text-indigo-300">{{ email }}</span>
+        </p>
+    </div>
+
+    <!-- OTP Form -->
+    <form method="post" action="{% url 'verify_otp' %}" class="space-y-5">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="p-3 rounded-lg bg-rose-950/50 border border-rose-800 text-rose-300 text-xs">
+                {% for err in form.non_field_errors %}{{ err }}<br>{% endfor %}
+            </div>
+        {% endif %}
+
+        <div>
+            <label class="block text-center text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
+                Enter 6-Digit Code
+            </label>
+            {{ form.otp_code }}
+            {% if form.otp_code.errors %}
+                <p class="text-rose-400 text-xs text-center mt-1.5">{{ form.otp_code.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Expiration Timer -->
+        <div class="flex items-center justify-center gap-2 text-xs py-2 px-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-slate-300">
+            <span>⏱️ Time remaining:</span>
+            <span id="countdown-timer" class="font-mono font-bold text-indigo-400">Loading...</span>
+        </div>
+
+        <button type="submit" id="verify-btn" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition duration-200">
+            Verify & Activate Account
+        </button>
+    </form>
+
+    <!-- Resend OTP Section -->
+    <div class="mt-6 pt-5 border-t border-slate-800/80 flex flex-col items-center gap-3">
+        <form method="post" action="{% url 'resend_otp' %}" class="w-full text-center">
+            {% csrf_token %}
+            <button type="submit" id="resend-btn" {% if not can_resend %}disabled{% endif %} class="text-xs font-medium text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                {% if can_resend %}
+                    Didn't receive the code? <span class="underline">Resend OTP</span>
+                {% else %}
+                    Resend available in <span id="resend-countdown" class="font-mono font-bold">{{ seconds_until_resend }}</span>s
+                {% endif %}
+            </button>
+        </form>
+
+        <a href="{% url 'register' %}" class="text-xs text-slate-500 hover:text-slate-400 transition">
+            &larr; Change email or register again
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live Expiration Timer
+    let secondsLeft = {{ seconds_left }};
+    const timerElement = document.getElementById('countdown-timer');
+    const verifyBtn = document.getElementById('verify-btn');
+
+    function updateCountdown() {
+        if (secondsLeft <= 0) {
+            timerElement.textContent = "Expired";
+            timerElement.classList.remove('text-indigo-400');
+            timerElement.classList.add('text-rose-400');
+            return;
+        }
+
+        const minutes = Math.floor(secondsLeft / 60);
+        const seconds = secondsLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        secondsLeft--;
+    }
+
+    updateCountdown();
+    const interval = setInterval(() => {
+        if (secondsLeft <= 0) {
+            updateCountdown();
+            clearInterval(interval);
+        } else {
+            updateCountdown();
+        }
+    }, 1000);
+
+    // Resend Cooldown Countdown
+    let resendSeconds = {{ seconds_until_resend }};
+    const resendCountdownElement = document.getElementById('resend-countdown');
+    const resendBtn = document.getElementById('resend-btn');
+
+    if (resendSeconds > 0 && resendCountdownElement) {
+        const resendInterval = setInterval(() => {
+            resendSeconds--;
+            if (resendSeconds <= 0) {
+                clearInterval(resendInterval);
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = `Didn't receive the code? <span class="underline">Resend OTP</span>`;
+            } else {
+                resendCountdownElement.textContent = resendSeconds;
+            }
+        }, 1000);
+    }
+</script>
+{% endblock %}

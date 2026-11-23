@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django Auth Demo{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <nav class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="{% url 'home' %}" class="flex items-center gap-2.5 font-bold text-lg tracking-tight text-white hover:text-indigo-400 transition">
+                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/25 text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </span>
+                    <span>Auth<span class="text-indigo-400">Demo</span></span>
+                </a>
+
+                <div class="flex items-center gap-4">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-slate-400 hidden sm:inline">Signed in as <strong class="text-slate-200">{{ user.username }}</strong></span>
+                            <a href="{% url 'logout' %}" class="px-3.5 py-1.5 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition">
+                                Logout
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-sm font-medium text-slate-300 hover:text-white transition">Sign In</a>
+                        <a href="{% url 'register' %}" class="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center px-4 py-12 relative overflow-hidden">
+        <!-- Glow accents in background -->
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="w-full max-w-md mx-auto relative z-10">
+            <!-- Messages Notification Banner -->
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-xl text-sm flex items-start gap-3 backdrop-blur-md border 
+                            {% if message.tags == 'error' %}
+                                bg-rose-950/60 border-rose-800/80 text-rose-200
+                            {% elif message.tags == 'warning' %}
+                                bg-amber-950/60 border-amber-800/80 text-amber-200
+                            {% elif message.tags == 'success' %}
+                                bg-emerald-950/60 border-emerald-800/80 text-emerald-200
+                            {% else %}
+                                bg-indigo-950/60 border-indigo-800/80 text-indigo-200
+                            {% endif %}">
+                            <span class="mt-0.5">
+                                {% if message.tags == 'error' %}⚠️
+                                {% elif message.tags == 'warning' %}⏳
+                                {% elif message.tags == 'success' %}✅
+                                {% else %}ℹ️{% endif %}
+                            </span>
+                            <div class="flex-1 font-medium leading-relaxed">{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
+        <p>Django Authentication Demo &bull; Gmail OTP Verification &bull; Google OAuth 2.0</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
